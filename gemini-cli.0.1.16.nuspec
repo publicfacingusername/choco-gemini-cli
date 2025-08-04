@@ -9,7 +9,7 @@
     <title>Gemini CLI</title>
     <authors>Google</authors>
     <projectUrl>https://github.com/google-gemini/gemini-cli</projectUrl>
-    <iconUrl>https://cdn.jsdelivr.net/gh/publicfacingusername/choco-gemini-cli@[replace_this]/gemini_logo_scaled.svg</iconUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/publicfacingusername/choco-gemini-cli@2eb99c779fac6342a2cd6313dd669734c924f156/gemini_logo_scaled.png</iconUrl>
     <licenseUrl>https://github.com/google-gemini/gemini-cli/blob/main/LICENSE</licenseUrl>
     <projectSourceUrl>https://github.com/google-gemini/gemini-cli</projectSourceUrl>
     <docsUrl>https://gemini-cli-docs.pages.dev/en/</docsUrl>
