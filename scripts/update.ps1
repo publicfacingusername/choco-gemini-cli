@@ -19,6 +19,15 @@ if (-not $nuspec) {
 }
 
 $nuspecContent = Get-Content -Path $nuspec.FullName -Raw
+$currentVersionMatch = [regex]::Match($nuspecContent, '<version>([^<]+)</version>')
+$currentVersion = if ($currentVersionMatch.Success) { $currentVersionMatch.Groups[1].Value } else { '' }
+
+$expectedNuspecName = "$packageName.$latest.nuspec"
+if ($currentVersion -eq $latest -and $nuspec.Name -eq $expectedNuspecName) {
+  Write-Host "$packageName is already at $latest. No update needed."
+  return
+}
+
 $updatedNuspec = [regex]::Replace(
   $nuspecContent,
   '<version>[^<]+</version>',
@@ -28,9 +37,8 @@ if ($updatedNuspec -ne $nuspecContent) {
   Set-Content -Path $nuspec.FullName -Value $updatedNuspec -Encoding utf8
 }
 
-$newNuspecName = "$packageName.$latest.nuspec"
-if ($nuspec.Name -ne $newNuspecName) {
-  Rename-Item -Path $nuspec.FullName -NewName $newNuspecName
+if ($nuspec.Name -ne $expectedNuspecName) {
+  Rename-Item -Path $nuspec.FullName -NewName $expectedNuspecName
 }
 
 Write-Host "Updated $packageName to $latest"
