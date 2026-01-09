@@ -1,0 +1,62 @@
+name: Update Gemini CLI package
+
+on:
+  schedule:
+    - cron: '0 */8 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update package files
+        shell: pwsh
+        run: |
+          ./scripts/update.ps1
+
+      - name: Check for changes
+        id: changes
+        shell: pwsh
+        run: |
+          if (git status --porcelain) {
+            "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Commit changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git add -A
+          git commit -m "Update Gemini CLI package"
+          git pull --rebase
+          git push
+
+      - name: Build package
+        if: steps.changes.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          $nuspec = Get-ChildItem -Filter "gemini-cli.*.nuspec" | Select-Object -First 1
+          if (-not $nuspec) { throw "No nuspec found to pack." }
+          choco pack $nuspec.FullName
+
+      - name: Push package
+        if: steps.changes.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        run: |
+          if (-not $env:CHOCOLATEY_API_KEY) { throw "CHOCOLATEY_API_KEY is not set." }
+          $pkg = Get-ChildItem -Filter "gemini-cli.*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $pkg) { throw "No nupkg found to push." }
+          choco push $pkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
