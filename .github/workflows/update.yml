@@ -57,6 +57,23 @@ jobs:
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         run: |
           if (-not $env:CHOCOLATEY_API_KEY) { throw "CHOCOLATEY_API_KEY is not set." }
+          $nuspec = Get-ChildItem -Filter "gemini-cli.*.nuspec" | Select-Object -First 1
+          if (-not $nuspec) { throw "No nuspec found to read version." }
+          [xml]$nuspecXml = Get-Content -Path $nuspec.FullName
+          $packageId = $nuspecXml.package.metadata.id
+          $packageVersion = $nuspecXml.package.metadata.version
+          if (-not $packageId -or -not $packageVersion) {
+            throw "Package id/version missing from nuspec."
+          }
+          $existing = choco list $packageId --source https://community.chocolatey.org/api/v2/ --exact --all --limit-output |
+            Where-Object { $_ -eq "$packageId|$packageVersion" }
           $pkg = Get-ChildItem -Filter "gemini-cli.*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $pkg) { throw "No nupkg found to push." }
-          choco push $pkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
+          $pushOutput = choco push $pkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            if ($pushOutput -match 'already exists on the repository') {
+              Write-Host "Package $packageId $packageVersion already exists. Skipping push."
+              exit 0
+            }
+            throw "choco push failed: $pushOutput"
+          }
