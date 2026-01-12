@@ -8,6 +8,8 @@ $env:Path = (@(
 try { refreshenv } catch { }
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$toolsLocation = Get-ToolsLocation
+$installRoot = Join-Path $toolsLocation 'gemini-cli'
 
 # Verify Node.js and npm are available
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
@@ -27,9 +29,9 @@ if ($nodeMajor -lt 20) {
   throw "Gemini CLI requires Node.js >= 20. Found $nodeVersion."
 }
 
-# Install the package locally to avoid user-global npm paths
+# Install the package in the shared tools location to keep the package folder small
 $pkgVersion = $env:ChocolateyPackageVersion
-$npmRoot = Join-Path $toolsDir 'npm'
+$npmRoot = $installRoot
 if (-not (Test-Path $npmRoot)) {
   New-Item -ItemType Directory -Path $npmRoot | Out-Null
 }
@@ -37,6 +39,7 @@ if (-not (Test-Path $npmRoot)) {
 Write-Host "Installing @google/gemini-cli@$pkgVersion via npm (this can take a few minutes)..."
 & $npmCmd install --prefix $npmRoot "@google/gemini-cli@$pkgVersion" `
   --no-fund --no-audit --loglevel=error --progress=false --no-update-notifier `
+  --omit=dev --omit=optional `
   --registry=https://registry.npmjs.org/
 if ($LASTEXITCODE -ne 0) {
   throw "npm install failed with exit code $LASTEXITCODE"
