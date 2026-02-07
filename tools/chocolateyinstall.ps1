@@ -37,10 +37,22 @@ if (-not (Test-Path $npmRoot)) {
 }
 
 Write-Host "Installing @google/gemini-cli@$pkgVersion via npm (this can take a few minutes)..."
-& $npmCmd install --prefix $npmRoot "@google/gemini-cli@$pkgVersion" `
-  --no-fund --no-audit --loglevel=error --progress=false --no-update-notifier `
-  --omit=dev --omit=optional `
-  --registry=https://registry.npmjs.org/
+$npmArgs = @(
+  'install',
+  '--prefix', $npmRoot,
+  "@google/gemini-cli@$pkgVersion",
+  '--no-fund',
+  '--no-audit',
+  '--loglevel=info',
+  '--progress=false',
+  '--no-update-notifier',
+  '--foreground-scripts',
+  '--omit=dev',
+  '--omit=optional',
+  '--registry=https://registry.npmjs.org/'
+)
+$npmExe = if ($npmCmd.Path) { $npmCmd.Path } else { $npmCmd.Source }
+& $npmExe @npmArgs
 if ($LASTEXITCODE -ne 0) {
   throw "npm install failed with exit code $LASTEXITCODE"
 }
