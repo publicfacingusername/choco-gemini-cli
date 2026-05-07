@@ -3,7 +3,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>gemini-cli</id>
-    <version>0.41.1</version>
+    <version>0.41.2</version>
     <packageSourceUrl>https://github.com/publicfacingusername/choco-gemini-cli</packageSourceUrl>
     <owners>publicfacingusername</owners>
     <title>Gemini CLI</title>
@@ -82,6 +82,7 @@ For other authentication methods, including Google Workspace accounts, see the [
     <file src="tools\**" target="tools" />
   </files>
 </package>
+
 
 
 
